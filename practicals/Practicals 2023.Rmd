@@ -1,0 +1,1240 @@
+---
+title: 'Practicals in Quantiative Genetic Analyses'
+author: "Rasmus Bak Stephansen & Peter Sørensen"
+date: "`r Sys.Date()`"
+bibliography: qg2021.bib
+biblio-style: apalike
+link-citations: yes
+output:
+  pdf_document:
+    dev: png
+    includes:
+      in_header: preamble.tex
+  html_document:
+    includes:
+      in_header: mathjax_header.html
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+# Introduction
+In these practicals we will be analysing quantitative traits observed in a mice population. The mouse data consist of phenotypes for traits related to growth and obesity (e.g. body weight, glucose levels in blood), pedigree information, and genetic marker data. The practicals will be a mix of theoretical and practical exercises in R that are used for illustrating/applying the theory presented in the lectures and corresponding notes. 
+
+* Practical 1: Basic concepts in breeding and understanding of quantitative traits
+* Practical 2: Basic Quantitative Genetics illustrated in the mouse data
+* Practical 3: Estimation of Genetic Parameters for traits in the mouse data
+* Practical 4: Estimation of Breeding Values for traits in the mouse data
+* Practical 5: Estimation of Genomic Breeding Values for traits in the mouse data
+
+
+
+\newpage
+
+# Practical 1: Basic concepts in breeding and quantitative genetics
+
+
+## Time schedule of practical session 1:
+\begin{tabular}{|l|l|}
+\hline
+Time & Activity \\
+\hline
+11:15 & Questions to lecture and multiple-choice questions \\
+\hline
+11:25 & Introduction to exercises \\
+\hline
+11:35 & Assignments to groups – work with exercises \\
+\hline
+12:00 & Break \\
+\hline
+12:35 & Prepare final words of exercises in each group \\
+\hline
+12:45 & Present final words \\
+\hline
+12:50 & Repeat multiple-choice questions \\
+\hline
+13:00 & End of practical session 1 \\
+\hline
+\end{tabular}
+
+
+
+## Exercises 1: 
+
+Below are a few questions related to basic concepts in breeding and quantitative genetics. Discuss the question in groups of 3-5 students. Summarize your answer in a few bullet points.
+
+#### Q1: What is breeding and quantiative genetics?
+#### A1: 
+
+Breeding refers to the process of intentionally producing offspring with specific desired traits. This can be done in both plants and animals and involves the selection of parent organisms based on their genetic characteristics, followed by controlled mating or pollination.
+
+Quantiative Genetics is the study of heredity and the variation of traits passed down from generation to generation. Genetics provides the theoretical foundation for breeding, as breeders use genetic principles to understand how traits are passed down and how they can be influenced.
+
+Natural selection and artificial selection are two mechanisms that drive evolution and the development of new traits in organisms. 
+
+#### Q2: What is natural selection?
+#### A2: 
+Natural selection is the process by which certain traits become more or less common in a population over time based on the environment. This occurs when organisms with certain traits are more successful in surviving and reproducing, passing on their traits to the next generation. Over time, traits that confer a survival advantage will become more common in the population, leading to evolution.
+
+#### Q3: What is artificial selection?
+#### A3: 
+Artificial selection involves human intervention in the selection of traits. This is often done through controlled breeding programs, where organisms with desired traits are selectively mated to produce offspring with those traits. This can be used to develop new varieties of crops, livestock, and other organisms with specific desired characteristics.
+
+#### Q4: What is the difference between articial and natural selection?
+#### A4: 
+While natural selection operates based on environmental pressures, artificial selection operates based on human goals and desires. Both mechanisms can result in the development of new traits, but artificial selection allows for much more control and direction in the process.
+
+#### Q5: What is the definition of a quantitative trait and provide some examples?
+#### A5: 
+A quantitative trait, also known as a continuous trait, is a trait that varies in a continuous manner and is influenced by many genes and the environment. Quantitative traits are usually measured on a scale and can range from very small to very large values. 
+Examples of quantitative traits include height, weight, milk production in dairy cattle, and grain yield in crops. 
+
+
+#### Q6: Is it easy to breed for quantitative trait?
+#### A6: 
+These traits are typically difficult to breed for as they are influenced by a large number of genes, each with a small effect, as well as environmental factors. 
+Breeding programs for quantitative traits typically involve the use of statistical methods to select for the desired trait based on the relationship between the trait and molecular markers, pedigree information, and environmental data.
+
+
+
+#### Q7: Which information can we collect about P, G and E?
+The relationship between phenotypes (P) and genotypes (G) and the environment (E) can be summarized by the following equation: 
+
+                   					P = G + E
+#### A7: 
+P: We can collect phenotypes for quantitative traits such as height, weight, milk production in dairy cattle, and grain yield in crops. 
+G: We can collect genotype information about breed, pedigree, family, genetic markers. 
+E. We can collect environmental information about type of soil, weather. 
+
+#### Q8: Can you give an example of a successful breeding program and its impact on agriculture or the industry?
+#### A8: 
+One example of a successful breeding program in dairy cattle is the Holstein breed. The Holstein breed is a dairy cattle breed that originated in the Netherlands and is now widely used in dairy production worldwide.
+Breeders have been selectively breeding Holsteins to have exceptional milk production, with some animals producing over 10,000 kilos of milk per year.
+In addition to high milk production, breeders have also worked to improve other traits such as reproductive efficiency, longevity, and health. 
+The success of the Holstein breed has led to its widespread use in dairy production around the world and has been a major factor in the growth of the dairy industry.
+The Holstein breeding program is a good example of how breeding can be used to improve production in livestock and make a significant impact on the industry.
+
+
+
+\newpage
+
+## Exercises 2: Explorative data analysis of mouse data
+In this exercise we will perform an explorative data analyses of two quantitative traits, body weight and blood glucose levels, observed in the F2 mouse population. These explorative data analyses includes computation of basic descriptive statistics such as mean, and variance used to describe each of these traits. Distribution plots (e.g., histogram) will be used to visualize whether the trait phenotypes follow a normal distribution. Boxplots will be used to spot potential effects of explanatory variables.  Furthermore relationships between traits and variables will be characterized in terms of correlations and linear relationships.
+
+
+One of the first thing to do is to explore the data used in the analysis. The goal is to understand the variables, how many records the data set contains, how many missing values, what is the variable structure, what are the variable relationships and more. 
+
+The two quantitative traits we will be analysing are glucose levels in the blood (Gl) and body weight (BW) measured in the mice at 8 weeks of age. For each of these measurement we have information about the sire (father), dam (mother), gender and reps (batch). 
+
+```{r, echo=FALSE}
+mouse <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/mouse.rds"))
+Weight <- mouse[,"BW"]
+Glucose <- mouse[,"Gl"]
+Reps <- mouse[,"reps"]
+str(mouse)
+```
+
+Histograms and boxplots can be used to visualize the distribution and compare the two traits. Based on histrograms the two traits appear to be normally distributed
+```{r, fig.align='center', eval=TRUE, echo=FALSE}
+layout(matrix(1:4,ncol=2,byrow=TRUE))
+hist(Weight)
+hist(Glucose)
+boxplot(Weight, main="Weight", frame.plot=FALSE)
+boxplot(Glucose, main="Glucose", frame.plot=FALSE)
+```
+
+#### Q1: Phenotypic relationship between body weight and glucose levels.
+Below is a scatter plot of the the 2 traits that can be used to illustrate their relationship. Is there a strong relationship between the phenotypes of weight and glucose?
+
+```{r, eval=TRUE, echo=FALSE}
+plot(Weight,Glucose, frame.plot=FALSE, main=paste("Correlation=",round(cor(Weight,Glucose),2)))
+```
+
+
+\newpage
+#### Q2: Influence of family relationship on the traits.
+Boxplots can be used to visualize the potential effect of family structure (e.g. sire) on the two traits. Based on these plots do you think family relationship influence the traits?
+
+```{r, fig.align='center', eval=TRUE, echo=FALSE}
+layout(matrix(1:2,ncol=2))
+Sire <- mouse$sire
+Dam <- mouse$dam
+boxplot(Weight~Sire, main="Sire effect", horizontal=TRUE, frame.plot=FALSE)
+boxplot(Glucose~Sire, main="Sire effect", horizontal=TRUE, frame.plot=FALSE)
+```
+
+
+
+\newpage
+#### Q3: Influence of gender.
+The boxplots below visualize the potential effect of gender on the two traits. Describe the effect of gender. Does gender influence the traits?
+
+```{r, fig.align='center', eval=TRUE, echo=FALSE}
+layout(matrix(1:2,ncol=2))
+Sire <- mouse$sire
+Gender <- mouse$sex
+boxplot(Weight~Gender, main="Gender effect", frame.plot=FALSE)
+boxplot(Glucose~Gender, main="Gender effect", frame.plot=FALSE)
+```
+
+
+\newpage
+#### Q4: Fitting a statistical model that include effects of sire, dam, gender and reps.
+The exploratory data analysis is the process of analyzing and visualizing the data to get a better understanding of the data. It is not a formal statistical test. Which factors should we include in the statistical model? To best answer these question we can fit a linear model that include these factors (sire, dam, sex, reps) in the model. The results from this analyses is shown below. There is a strong effect of sire, dam, gender and reps. Do you think genetics play a role in these traits?  
+
+```{r, eval=T, echo=FALSE}
+fit <- lm(Weight~Sire+Dam+Gender+Reps)
+anova(fit)
+fit <- lm(Glucose~Sire+Dam+Gender+Reps)
+anova(fit)
+```
+
+
+
+
+\newpage
+
+## Further details about mouse data
+
+The __M16 mouse__ was established as an outbred animal model of early onset polygenic obesity and diabesity. This was done by selection for 3- to 6-week weight gain for 27 generations from  an outbred  ICR  base  population.  Breeding  criterion  was within-litter  selection  for  the  male  and  female  with  the largest weight gain from 3 to 6 weeks of age. An ICR control line was maintained in parallel, with random mating from  generation  to  generation  but  maintaining  a  similar effective population size. Mice from the M16 line ar elarger at all ages and have increased body fat percentage, fat cell  size,  fat  cell  numbers,  and  organ  weights  when  compared with ICR. Mice from the M16 line are larger at all ages and have increased body fat percentage, fat cell  size,  fat  cell  numbers,  and  organ  weights  when  compared with ICR. These mice also exhibit hyperphagia, accompanied by moderate obesity, and are hyperglycemic, hyperinsulinemic, and hypercholesterolemic.
+
+The __ICR mouse__ is a strain of albino mice originating in SWISS and selected by Dr. Hauschka to create a fertile mouse line. Because mice of this strain have been sent to various places from the Institute of Cancer Research in the USA, the strain was named ICR after the initial letters of the institute. Mice of this strain are relatively large albinos with a gentle nature that grow well. The ICR mouse is a general-purpose model used for studies in a wide range of fields including toxicity, pharmacology, drug efficacy, and immunology.
+
+
+A large __F2 population__ (n=1181) was __established by crossing the M16 and ICR lines__ (for a recent description of relevant phenotypes in the parental lines, see https://onlinelibrary.wiley.com/doi/epdf/10.1038/oby.2004.176). Twelve F1 families resulted from six pair matings of M16 males x ICR females and six pair matings of the reciprocal cross. A total of 55 F1 dams were mated to 11 F1 sires in sets of five F1 full sisters mated to the same F1 sire. These same specific matings were repeated in three consecutive replicates. Thus, the F2 population consisted of 55 full-sib families of up to 24 individuals each and 11 sire families families of up to 120 individuals each. Actual numbers of mice within families varied slightly due to a small number of failed pregnancies. All litters were standardized at birth to eight pups, with approximately equal representation of males and females.
+
+More information about the mouse data can be found in the following publications:
+
+https://onlinelibrary.wiley.com/doi/epdf/10.1038/oby.2004.176
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1449794/
+
+
+\newpage
+
+# Practical 2: Basic Quantitative Genetics
+
+
+## Time schedule of practical session 2:
+\begin{tabular}{|l|l|}
+\hline
+Time & Activity \\
+\hline
+11:15 & Questions to lecture and multiple-choice questions \\
+\hline
+11:25 & Introduction to exercises \\
+\hline
+11:35 & Assignments to groups – work with exercises \\
+\hline
+12:00 & Break \\
+\hline
+12:35 & Prepare final words of exercises in each group \\
+\hline
+12:45 & Present final words \\
+\hline
+12:50 & Repeat multiple-choice questions \\
+\hline
+13:00 & End of practical session 1 \\
+\hline
+\end{tabular}
+
+
+
+## Exercises 1:
+Below are a few questions related to key concepts in quantitative genetics. Discuss the question in groups of 3-5 students. Summarize your answer in a few bullet points.
+
+#### Q1: What is the infinitesimal model in quantitative genetics?
+#### A1: 
+The infinitesimal model is a mathematical model used in quantitative genetics to study the behavior of quantitative traits, which are traits that are influenced by multiple genes and the environment. This model is based on the assumption that the effect of each gene contributing to a quantitative trait is infinitesimally small, meaning it is very small, but not zero.
+
+                                    
+#### Q2: What are the main components in the infinitesimal model?
+#### A2: 
+The components of the infinitesimal model include:
+
+\begin{align}
+   P = G + E + GxE  \notag
+\end{align}
+
+P = Phenotypic value refers to the observed trait value within a population and can be decomposed into the genetic and environmental components.
+
+G = Genetic value refers to the contribution by all genes to a trait.
+ 
+E = Environmental value refers to the part of the phenotypic value explained by non-genetic influences on a trait, such as nutrition, climate, and other environmental factors.
+
+GxE = Gene-environment interaction value refers to the interaction between genes and the environment that can influence the expression of a trait.
+
+The genotypic value (G) in the model can be split into additive genetic value (A), dominance value (D), and epistatic value (I). The infinitesimal model becomes:
+
+\begin{align}
+   P = A + I + D + E   \notag
+\end{align}
+
+#### Q3: How are the values in the infinitesimal model distributed?
+#### A3: 
+The histograms below show the distribution of the phenotypic, genetic and environmental values for quantitive trait under two scenarios. In the top row the trait is influenced by a single gene whereas in the bottom row the trait is influenced by 100 genes. Describe difference in these plots.
+
+```{r, echo=FALSE, fig.cap="Distribution of genotypic and phenotypic values for a quantitative trait influenced by a single locus model (top panel) or multiple loci (bottom panel)"}
+genotype <- c("A1A1","A1A2","A2A2")
+genotype_effects <- c(-1,0,1)
+names(genotype_effects) <- genotype
+n = 10000     # number of individuals
+af1 = 0.5     # allele frequency of allele A1 
+af2 = 1- 0.5  # allele frequency of allele A2
+genotype_prob <- c(af1*af1, 2*af1*af2,af2*af2)
+genotypes <- sample(genotype,size=n,prob=genotype_prob, replace=TRUE)
+
+layout(matrix(1:6,ncol=3, byrow=TRUE))
+a <- genotype_effects[genotypes]
+e <- rnorm(n)
+y <- a+e
+hist(y, xlab="phenotypic values",main="P")
+hist(a, xlab="genotypic values",main="G")
+hist(e, xlab="environmental values",main="E")
+
+m <- 100      # number of causal loci
+a <- rep(0,n) # initial vector of genotypic values
+for (locus in 1:m) {
+genotypes <- sample(genotype,size=n,prob=genotype_prob, replace=TRUE)
+a <- a + genotype_effects[genotypes]/m
+}
+e <- rnorm(n)
+y <- a+e
+hist(y, xlab="phenotypic values",main="P")
+hist(a, xlab="genotypic values",main="G")
+hist(e, xlab="environmental values",main="E")
+```
+
+#### Q4: What are the variance components in the infinitesimal model?
+#### A4:
+
+\begin{align}
+V_{P} &= V_{G} + V_{E} \notag \\
+      &= V_{A} + V_{D} + V_{I} + V_{E} \notag 
+\end{align}
+
+The variance components corresponds to the values included in the infinitesimal model.
+
+#### Q5: What is heritability and how is it related to the infinitesimal model?
+#### A5:
+
+Broad-sense heritability, the ratio of total genetic variance $V_{G}$ to the overall phenotypic variance $V_{P}$:
+
+\begin{align}
+H^2 &= V_{G}/V_P \notag \\
+    &= (V_{A} + V_{D} + V_{I})/V_P  \notag
+\end{align}
+
+Narrow-sense heritability, the ratio of additive genetic variance $V_{A}$ to the overall phenotypic variance $V_{P}$:
+
+\begin{align}
+h^2 &= V_{A}/V_P  \notag
+\end{align}
+
+
+## Exercise 2: Single locus model for a quantiative trait
+In this exercise we will continue our explorative data analyses of two quantitative traits, body weight and blood glucose levels, observed in the F2 mouse population. We will be characterizing and investigating the potential effects of a single marker locus. This includes computation of allele and genotype frequencies, evaluating different genetic models, and estimation of the genetic variances for the single marker locus. 
+
+
+### Load data 
+The data for the analysis is loaded using the 'readRDS' function. The 'mouse' data 
+contains information on mice, such as body weight. 
+
+```{r, eval=TRUE, echo=TRUE}
+mouse <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/mouseqtl.rds"))
+```
+
+### Explore data
+The structure of the 'mouse' data is explored 
+using the 'str' function.
+
+```{r, eval=TRUE, echo=TRUE}
+str(mouse)
+```
+
+The data set now include observations on two genetic markers. The table 'table' function can be used to explore the two marker variables:
+```{r, eval=TRUE, echo=TRUE}
+table(mouse$M227)
+```
+
+#### Q1: What are the genotype and allele frequencies for M227?
+#### A1: 
+Include the allele and genotype frequencies for M227 in the following tables:
+\begin{center} 
+\begin{tabular}{|c|c|c|}
+\hline
+Variable	& M227	 \\
+\hline
+$f_{AA}$	&			 \\
+\hline
+$f_{AB}$	&			 \\
+\hline
+$f_{BB}$	&			 \\
+\hline
+$f_{A}$	&			 \\
+\hline
+$f_{B}$	&			 \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+### Make a boxplots to visualize the potential effect of the marker
+The `boxplot` function to visualize the potential effect of the marker variable M227 on the two traits:
+```{r, fig.align='center', eval=TRUE, echo=TRUE}
+layout(matrix(1:2,ncol=2))
+boxplot(mouse$BW~mouse$M227, main="M227 - Body Weight")
+boxplot(mouse$Gl~mouse$M227, main="M227 - Glucose")
+```
+#### Q2: Does the marker variable M227 potentially influence body weight and glucose?
+#### A2: 
+
+To best answer these question we can fit a linear model that also include the effect of the marker variable in addition to sex and reps. 
+
+### Fit a linear model to estimate the effect of the marker, taking into account sex, reps, and M227
+```{r, eval=TRUE, echo=TRUE}
+fit <- lm(BW~ sex + reps + M227, data=mouse)
+```
+
+### Run an ANOVA test on the fitted model to determine if any of the variables have a significant effect
+```{r, eval=TRUE, echo=TRUE}
+anova(fit)
+```
+
+#### Q3: Based on the linear model results do marker variable M227 influence body weight?
+#### A3: 
+
+
+### Estimate genetic variance explianed by the marker
+Now we want to compute the genetic variance associated with marker M227. The formula below shows that genetic variance for a single locus model $\sigma_G^2$ consists of two components. The first component $\sigma_A^2$ is called the __genetic additive variance__ and the second component $\sigma_D^2$ is termed __dominance variance__. Here $\sigma_A^2$ corresponds to the variance of the breeding values. The variance of breeding values is also called the additive genetic variance, because as we have already seen the breeding values are additive in the number of favorable alleles. In populations where there is no additive genetic variance, individuals all have the same breeding value. Therefore, they will produce offspring with the same expected advantage (zero), and selection cannot generate any improvement over generations. Because $\sigma_D^2$ corresponds to the variance of the dominance deviation effects it is called dominance variance.
+
+\begin{align}
+  \sigma_G^2 &=  2pq\alpha^2 + \left(2pqd \right)^2 \notag\\
+             &=  \sigma_A^2 + \sigma_D^2 \notag
+\end{align}
+
+
+### Fit linear model to estimate additive and dominance effect of the marker
+Now we will fit the full genetic model to locus M227 including both additive and dominance effects. The additive effect is modeled as previously shown by a variable `add` that is coded as -1, 0, and 1 (corresponding to -a, 0, a) for the genotypes AA, AB, and BB. The dominance effect is modeled by a variable `dom` that is coded as 0, 1, and 0 (corresponding to 0,d,0) for the genotypes AA, AB, and BB. The corresponding R code is shown below: 
+
+### Add two new columns to the mouse data: 'add' and 'dom', based on the value of 'M227'
+```{r, eval=TRUE, echo=TRUE}
+alleles <- c(-1,0,1)
+names(alleles) <- c("AA","AB","BB")
+mouse$add <- alleles[mouse$M227]
+mouse$dom <- as.numeric(mouse$add==1)
+```
+
+### Fit linear model to estimate the additive and dominance effects of the marker
+```{r, eval=TRUE, echo=TRUE}
+fit <- lm(BW~sex + reps + add + dom, data=mouse)
+```
+
+### Get a summary of the fitted model
+```{r, eval=TRUE, echo=TRUE}
+summary(fit)
+```
+
+The results from the linear model analysis suggest that only the additive genetic effect, 'add', is significantly different from 0.
+
+The regression coefficient for the variable 'add' is 2.05 and 'dom' is -0.88. These coefficients corresponds to the allele substitution effect ($\alpha$) and the dominance deviation ($d$). Previously we have estimated allele and genotype frequencies for M227. 
+
+#### Q4: What is the additive genetic variance associated with M227 for body weight?   
+#### A4: 
+
+#### Q5: What is the dominance genetic variance associated with M227 for body weight?   
+#### A5: 
+
+#### Q6: What is the heritability for marker M227 for body weight?   
+#### A6: 
+
+\newpage
+
+# Practical 3: Estimation of Genetic Parameters
+
+## Time schedule of practical session 3:
+\begin{tabular}{|l|l|}
+\hline
+Time & Activity \\
+\hline
+11:15 & Questions to lecture and multiple-choice questions \\
+\hline
+11:25 & Introduction to exercises \\
+\hline
+11:35 & Assignments to groups – work with exercises \\
+\hline
+12:00 & Break \\
+\hline
+12:35 & Prepare final words of exercises in each group \\
+\hline
+12:45 & Present final words \\
+\hline
+12:50 & Repeat multiple-choice questions \\
+\hline
+13:00 & End of practical session 1 \\
+\hline
+\end{tabular}
+
+
+## Exercise 1: Basic principles for estimating genetic parameters
+Estimation of genetic parameters is a key step in animal and plant breeding. Below are a few questions related to basic the basic principles for estimating breeding values based on pedigree information. Discuss the question in groups of 3-5 students. Summarize your answer in a few bullet points.
+
+#### Q1: Which genetic parameters do we typically want to estimate? 
+#### A1:
+In genetic analysis, we typically estimate a genetic model and its parameters to describe the inheritance and distribution of a trait of interest in a population. The choice of genetic model and parameters to be estimated depends on the nature of the trait, the available data, and the research question being addressed. Some of the most common genetic models and parameters that are estimated include:
+
+Additive genetic model: This model assumes that the effect of each allele on the trait is additive and that the total effect is the sum of the effects of all alleles. The parameters estimated in this model are the additive genetic effects of each allele, which are also known as the breeding values.
+
+Dominance genetic model: This model assumes that the effect of each allele on the trait is either dominant or recessive. The parameters estimated in this model are the dominance genetic effects of each allele, which describe the degree to which one allele masks the effect of another.
+
+Epistatic genetic model: This model assumes that the effect of each allele on the trait depends on the presence of other alleles in the genome. The parameters estimated in this model are the epistatic genetic effects, which describe the interactions between alleles.
+
+Genetic variance components: This model estimates the proportion of total variance in the trait that is due to genetic factors. The parameters estimated in this model are the genetic variance components, which describe the amount of variation in the trait that is due to differences in the genotypes of individuals in the population.
+
+Heritability: This parameter describes the proportion of total variance in the trait that is due to genetic factors. Heritability is often estimated using a combination of pedigree and phenotypic data, and it is a measure of the strength of the relationship between an individual's genotype and their phenotype.
+
+These are just a few examples of the types of genetic models and parameters that can be estimated. The choice of model and parameters to be estimated depends on the nature of the trait and the research question being addressed, and may require multiple rounds of modeling and analysis to achieve a suitable model.
+
+#### Q2: What kind of data to we use to heritability? 
+#### A2:
+The data required for estimating genetic parameters varies depending on the type of genetic model being used and the research question being addressed. However, some of the most common types of data used for estimating genetic parameters include:
+
+Phenotypic data: This data describes the trait of interest for each individual in the population. Phenotypic data may be quantitative, such as height or weight, or categorical, such as disease status.
+
+Pedigree data: This data describes the relationships between individuals in the population, including information on parents, offspring, and siblings. Pedigree data is used to estimate the relatedness between individuals and to determine the proportion of total variance in the trait that is due to genetic factors.
+
+Genotypic data: This data describes the genetic makeup of each individual in the population, including information on the presence or absence of specific alleles or markers. Genotypic data can be used to estimate the effects of specific alleles on the trait, to identify regions of the genome that are associated with the trait, and to perform linkage analysis to locate genes that are associated with the trait.
+
+Environmental data: This data describes the environmental factors that may influence the expression of the trait, such as diet, exercise, and exposure to environmental toxins. Environmental data can be used to adjust for the effects of environmental factors and to estimate the pure genetic effects on the trait.
+
+The amount and type of data required for estimating genetic parameters will depend on the complexity of the genetic model, the size of the population being studied, and the research question being addressed. In some cases, additional data, such as transcriptomic or proteomic data, may be required to fully understand the genetic basis of a trait.
+
+
+#### Q3: When should we re-estimate the heritability? 
+#### A3:
+Heritability estimates are based on the assumptions and methods used in the study, and these can change over time as new research findings and techniques become available. Additionally, heritability estimates can vary depending on the population being studied and the specific traits being measured. As a result, it is generally recommended to re-estimate heritability when there is reason to believe that previous estimates may no longer be accurate, such as when:
+
+The population has changed: If the population being studied has changed, for example due to migration or genetic drift, the heritability estimate may no longer be applicable.
+
+New methods or technologies become available: Advances in genetics, such as genome-wide association studies, can provide more detailed and accurate information about the genetic basis of a trait, leading to improved heritability estimates.
+
+The trait has changed: If the trait being studied has changed in some way, such as due to environmental factors, this may also impact the heritability estimate.
+
+In summary, heritability estimates should be re-evaluated when there is reason to believe that previous estimates may no longer be representative of the current situation, and that more accurate information can be obtained through new methods or technologies.
+
+
+<!-- #### Q3: What is the numerator relationship matrix?  -->
+<!-- #### A3: -->
+<!-- The Henderson algorithm is a method for estimating the numerator relationship matrix (NRM), also known as the relationship matrix or kinship matrix, in a population. The NRM is a symmetric matrix that describes the degree of relatedness between pairs of individuals in a population, and it is a crucial component in many genetic analysis methods, such as quantitative trait locus (QTL) mapping and genome-wide association studies (GWAS). -->
+
+<!-- The Henderson algorithm is an iterative method that estimates the NRM based on the pedigree information of the individuals in the population. The algorithm is based on the following steps: -->
+
+<!-- Initialize the NRM matrix: The NRM matrix is an n x n matrix, where n is the number of individuals in the population. Initialize the matrix with zeros. -->
+
+<!-- Define a matrix of coefficients: Define a matrix of coefficients, which represents the expected degree of relatedness between pairs of individuals based on their pedigree information. The coefficients can be based on the identity-by-descent (IBD) probabilities, which are the probabilities that a pair of individuals share a segment of identical DNA by descent. -->
+
+<!-- Estimate the coefficients: Estimate the coefficients by performing a series of iterations, in which the coefficients are updated based on the current estimates of the NRM. The coefficients are estimated using a set of linear equations that describe the relationships between pairs of individuals in the population. -->
+
+<!-- Update the NRM matrix: Update the NRM matrix using the estimated coefficients. -->
+
+<!-- Repeat the iteration: Repeat the iteration until convergence, which is typically achieved when the coefficients have stabilized and the NRM matrix has reached a stable estimate. -->
+
+<!-- Normalize the NRM matrix: Finally, normalize the NRM matrix by dividing each element by the square root of the product of the diagonal elements. This ensures that the NRM matrix has unit variance and allows for the comparison of relatedness between different pairs of individuals. -->
+
+<!-- The Henderson algorithm is an efficient method for estimating the NRM and is widely used in many genetic analysis methods. However, the accuracy of the estimated NRM depends on the quality of the pedigree information and the number of iterations performed. In some cases, additional methods, such as genomic information, may be used to improve the accuracy of the estimated NRM. -->
+
+<!-- #### Q2: How do we estimate the heritability using REML?  -->
+<!-- #### A2: -->
+<!-- Heritability can be estimated for a general pedigree using Restricted Maximum Likelihood (REML) by fitting a mixed-effects model that accounts for both genetic and environmental factors that influence a trait. The basic idea is to model the phenotype (observed trait) as a linear combination of fixed effects, random effects, and residual error. The fixed effects represent known covariates that affect the trait, such as age and sex, while the random effects represent the contribution of genetic factors, such as heritability, to the phenotype. The residual error represents any unexplained variation in the phenotype. -->
+
+<!-- To estimate heritability using REML, the following steps can be followed: -->
+
+<!-- Define the mixed-effects model: The model should include both fixed effects and random effects, as well as the residual error term. The random effects should be specified as random intercepts or slopes, to account for the different levels of similarity among individuals in the pedigree. -->
+
+<!-- Estimate the parameters of the model: The parameters of the mixed-effects model can be estimated using maximum likelihood or REML methods. The REML method is preferred when the goal is to estimate heritability, as it provides more accurate and efficient estimates of the random effects compared to the maximum likelihood method. -->
+
+<!-- Calculate the heritability estimate: Once the parameters of the mixed-effects model have been estimated, the heritability estimate can be calculated by dividing the variance of the random effects by the total phenotypic variance. This provides an estimate of the proportion of the total phenotypic variance that is due to genetic factors. -->
+
+<!-- It is important to note that REML is a complex method that requires a good understanding of statistical modeling and the underlying assumptions of the model. It is recommended to consult a statistician or seek help from a suitable resource if you are not familiar with REML. -->
+
+
+
+<!-- #### Q3: How do we estimate the heritability using Parent-Offspring regression?  -->
+<!-- #### A9: -->
+<!-- Parent-Offspring Regression is a statistical method used to estimate the heritability of a trait in a population. Heritability refers to the proportion of the variation in a trait that is due to genetic factors, as opposed to environmental factors. The parent-offspring regression method is based on the idea that the phenotypic (observed trait) similarity between parents and their offspring reflects the degree to which the trait is influenced by genetic factors. -->
+
+<!-- The basic principle of parent-offspring regression is to compare the phenotypic values of parents and their offspring, and to assess the degree to which the offspring resemble their parents. The regression line is fitted to the parent-offspring data, with the offspring phenotype as the dependent variable and the parent phenotype as the independent variable. The slope of the regression line represents the heritability estimate, as it reflects the proportion of the offspring phenotype that is due to the parent phenotype (i.e., the genetic component of the trait). -->
+
+<!-- The parent-offspring regression method is relatively simple and can provide a quick estimate of heritability for a given trait. However, it has some limitations, including the assumption that the offspring phenotype is only influenced by the parent phenotype (i.e., the genetic component of the trait) and not by any environmental factors. Additionally, the parent-offspring regression method is only applicable to traits that are normally distributed, and it can be affected by population stratification (the presence of multiple subpopulations within the study population) and other confounding factors. -->
+
+<!-- In summary, the parent-offspring regression method is a useful tool for estimating the heritability of a trait, but it should be used with caution and in conjunction with other methods, such as twin studies or genomic methods, to obtain a more comprehensive and accurate estimate of heritability. -->
+
+
+## Exercise 2: Estimate genetic parameters for mouse data 
+In this exercise we will estimate genetic parameters (heritability) for a quantitative trait observed in the F2 mouse population. We will be using the REML method. This method allow for estimation of genetic parameters using phenotypic information for individuals from a general pedigree. REML is based on linear mixed model methodology and uses a likelihood approach to estimate genetic parameters. The REML method also require us to calculate an genetic relationship matrix using a recursive algorithm. These methods and algorithms are implemented in the R package `qgg`.
+
+This package provides an infrastructure for efficient processing of large-scale genetic and phenotypic data including core functions for: 
+
+* fitting linear mixed models 
+* constructing genetic relationship matrices 
+* estimating genetic parameters (heritability and correlation) 
+* performing genomic prediction and genetic risk profiling 
+* single or multi-marker association analyses
+
+We will also be using the qgg package for the remaining practicals. 
+
+## Installation of the R package qgg:
+
+You can install the qgg and corrplot packages from CRAN with:
+
+```{r,  eval=FALSE, echo=TRUE}
+install.packages("qgg")
+install.packages("corrplot") 
+```
+
+
+## R code for estimating genetic paramters
+This R code performs a REML (restricted maximum likelihood) analysis on mouse data. 
+The purpose of this analysis is to evaluate the results of estimating variance components 
+using a pedigree-based relationship matrix.
+
+
+### Load R packages
+The 'qgg' and 'corrplot' packages are loaded for use in the analysis.
+
+```{r, eval=TRUE, echo=TRUE}
+library(qgg) 
+library(corrplot)
+```
+
+### Load data 
+The data for the analysis is loaded using the 'readRDS' function. The 'mouse' data 
+contains information on mice, such as body weight. The 'pedigree' data contains 
+information on the family relationships.
+
+```{r, eval=TRUE, echo=TRUE}
+mouse <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/mouseqtl.rds"))
+pedigree <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/pedigree.rds"))
+```
+
+### Explore data
+The structure of the 'mouse', and 'pedigree' data is explored 
+using the 'str' function.
+
+```{r, eval=TRUE, echo=TRUE}
+str(mouse)
+str(pedigree)
+```
+
+The number of generations and number of mice in each generation can be determined 
+using the 'table' function.
+```{r,  eval=TRUE, echo=TRUE}
+table(pedigree$generation)
+```
+
+## Computing genetic relationship matrix for the mouse pedigree: 
+The REML analysis require us to calculate the genetic relationship matrix $A$. This is done using information about the individual id, mother, and father which is available in our pedigree data. 
+
+### Compute genetic relationship matrix for a small part of the mouse pedigree: 
+To illustrate this step we will first calculate it for a small part of the mouse pedigree. We are given the following pedigree and we want to compute the matrix $A$.
+
+```{r,  eval=TRUE, echo=TRUE}
+family <- c(13,14,84,1244,1248)
+pedigree[family,]
+```
+
+The additive genetic relationship ($A_{ij}$) between the various sources (j) and the individual itself, i.e. the candidate to be evaluated (i), can be seen in the table below.
+
+\begin{center} 
+\begin{tabular}{|c|c|}
+  \hline
+  Relative  &  $A_{ij}$\\
+  \hline
+  Self  &  1.0    \\
+  \hline
+  Unrelated  &  0    \\
+  \hline
+  Mother  &  0.5 \\
+  \hline
+  Father  &  0.5 \\
+  \hline
+  Grandparent  &  0.25 \\
+  \hline
+  Half-sib  &  0.25 \\
+  \hline
+  Full-sib  &  0.5 \\
+  \hline
+  Progeny  &  0.5 \\
+  \hline
+\end{tabular}
+\end{center}
+
+
+#### Q1: Compute the relationship matrix for the selected mouse family   
+#### A1: 
+
+
+### Compute genetic relationship matrix for the entire mouse pedigree: 
+A pedigree-based relationship matrix (A) is computed from the 'pedigree' data 
+using the 'grm' function. The dimensions of the A matrix are displayed.
+```{r, eval=TRUE, echo=TRUE}
+A <- grm(pedigree=pedigree) 
+dim(A)
+```
+The number of rows and columns should be equal to the number of individuals in the pedigree. Check the first 5 individuals in the matrix using the following command:
+
+```{r, eval=TRUE, echo=TRUE}
+A[1:5,1:5]
+```
+
+#### Q2: Are these individuals related?
+#### A2:
+
+
+Previously we have determined the genetic relationship matrix for a small part of the mouse pedigree. We can extract the corresponding elements from the $A$ matrix for the entire mouse pedigree using the following command:
+
+```{r, eval=TRUE, echo=TRUE}
+ids <- c(13,14,84,1244,1248)
+A[ids,ids]
+```
+
+#### Q3: Are the values the same as you have found using the "manual" approach? 
+#### A3:
+
+
+### Make a plot of A matrix (slow)
+A plot of the A matrix is created using the 'corrplot' function. 
+The plot is displayed in color, with a white background and no outline. 
+The method of plotting the A matrix is set to "color".
+
+```{r, eval=TRUE, echo=TRUE}
+corrplot(A, method="color", bg="white", 
+         outline=FALSE, col=NULL, tl.pos="n",is.corr = FALSE, xlab=FALSE, ylab=FALSE)
+```
+
+#### Q4: Describe the plot you just made of the genetic relationship? 
+#### A4:
+
+### Histogram of values in the matrix A
+A histogram is created to display the distribution of the breeding values estimated 
+using the A matrix and the 'table' function is used to display the different values. 
+```{r, eval=TRUE, echo=TRUE}
+hist(A, main="Values in the A matrix")
+table(as.vector(A))
+```
+
+#### Q5: Which values are observed in the A matrix and which type of relationship do they represent? 
+#### A5:
+
+
+
+### Define response variable
+The response variable 'y' is defined as the body weight column in the 'mouse' data.
+
+```{r, eval=TRUE, echo=TRUE}
+y <- mouse[,"BW"]
+```
+
+### Define design matrix for fixed effects
+A design matrix for fixed effects is created using the 'model.matrix' function 
+and is stored in the 'X' variable. The fixed effects include sex and reps, 
+which are predictors of body weight.
+
+```{r, eval=TRUE, echo=TRUE}
+X <- model.matrix(BW ~ sex + reps, data=mouse)
+ids <- rownames(X)
+```
+
+### Estimate variance components using REML and breeding values using BLUP
+The variance components and breeding values are estimated using the 'greml' function. 
+The function is run using the A matrix. The results are stored in 'fitA' variables. 
+The variance components are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+fitA <- greml(y=y, X=X, GRM=list(A=A[ids,ids]))
+fitA$theta
+```
+
+The first element in the 'theta' vector is the estimate of the additive genetic variance ($V_a$) and the second element is the estimate of the residual variance ($V_e$). 
+
+#### Q6: What is the heritability for body weight? 
+#### A6:
+
+
+In the experiment the mice were feed ad libitum. Now we want to perform a simlar experiment where mice are reared under restricted feed intake. We will record phenotypes for body weight and blood glucose levels and use mice from the same F2 population. 
+
+#### Q7: Should we re-estimate the heritability? 
+#### A7:
+
+
+
+\newpage
+
+
+
+# Practical 4: Estimation of Breeding Values
+
+## Time schedule of practical session 4:
+\begin{tabular}{|l|l|}
+\hline
+Time & Activity \\
+\hline
+11:15 & Questions to lecture and multiple-choice questions \\
+\hline
+11:25 & Introduction to exercises \\
+\hline
+11:35 & Assignments to groups – work with exercises \\
+\hline
+12:00 & Break \\
+\hline
+12:35 & Prepare final words of exercises in each group \\
+\hline
+12:45 & Present final words \\
+\hline
+12:50 & Repeat multiple-choice questions \\
+\hline
+13:00 & End of practical session 1 \\
+\hline
+\end{tabular}
+
+
+## Exercise 1: Basic principles for estimating pedigree based breeding values
+Estimation of breeding values is a key step in animal and plant breeding. Below are a few questions related to basic the basic principles for estimating breeding values based on pedigree information. Discuss the question in groups of 3-5 students. Summarize your answer in a few bullet points.
+
+
+#### Q1: What is the basic principle for estimating breeding values? 
+#### A1:
+
+The basic principles for breeding value estimation are as follows:
+
+Heritability: The first step in breeding value estimation is to determine the heritability of the trait of interest. Heritability is a measure of the proportion of total phenotypic variation that is due to genetic factors.
+
+Relatedness: The second step is to determine the relatedness between individuals in the population. This can be done using pedigree information or genomic data.
+
+Phenotypic information: The third step is to collect phenotypic information for each individual in the population. This information may include measurements of the trait of interest, as well as information on environmental factors that may influence the expression of the trait.
+
+Model selection: The fourth step is to select a model that describes the relationship between genotype, phenotype, and environment. This may involve the use of linear or nonlinear models, and may include the effects of specific alleles or markers, as well as environmental factors.
+
+Parameter estimation: The fifth step is to estimate the parameters of the model using the phenotypic and relatedness data. This may involve the use of maximum likelihood or Bayesian methods.
+
+Prediction: The final step is to use the model to predict the breeding value for each individual in the population. This prediction can be used to rank individuals based on their estimated genetic potential for a trait, and to make informed decisions about which individuals to select for breeding based on their genetic potential for a desired trait.
+
+The accuracy of breeding value estimation depends on several factors, including the quality of the phenotypic and relatedness data, the choice of model, and the methods used to estimate the parameters of the model. In general, more data and more complex models will result in more accurate predictions of breeding value.
+
+#### Q2: What is the expected breeding value conditional on observed phenotype? 
+#### A2:
+Expected breeding value (EBV) is an estimate of an individual's genetic potential for a trait of interest, based on its genotype and the phenotypes of its relatives. The EBV can be thought of as a predicted value for the individual's phenotype, based on its genetic information.
+
+The EBV is typically estimated using a combination of pedigree and phenotypic data, and is often used in animal breeding programs to select individuals for breeding based on their genetic potential for a desired trait.
+
+The expected breeding value conditional on observed phenotype is an estimate of an individual's EBV, taking into account its observed phenotype. This estimate accounts for both the effects of the individual's genotype and environmental factors that may influence the expression of the trait.
+
+The expected breeding value conditional on observed phenotype can be estimated using a variety of methods, including best linear unbiased prediction (BLUP) and Bayesian methods. These methods typically involve the use of mixed models, which incorporate both genetic and environmental effects, to estimate the individual's EBV.
+
+The expected breeding value conditional on observed phenotype is an important tool for animal breeders, as it provides a more accurate estimate of an individual's genetic potential for a trait, taking into account both its genotype and its observed phenotype. This information can be used to make informed decisions about which individuals to select for breeding based on their genetic potential for a desired trait.
+
+
+#### Q3: Which factors influence the accuracy of breeding value estimates?
+#### A3:
+
+The accuracy of breeding value estimates is influenced by several factors, including:
+
+Heritability: The accuracy of breeding value estimates is directly related to the heritability of the trait of interest. Traits with high heritability are more easily predicted based on genetic information, while traits with low heritability are more influenced by environmental factors and are less predictable.
+
+Relatedness: The accuracy of breeding value estimates is also influenced by the relatedness between individuals in the population. Individuals that are highly related are more likely to have similar breeding values, while individuals that are less related may have widely varying breeding values.
+
+Phenotypic data: The accuracy of breeding value estimates depends on the quality and quantity of phenotypic data available for each individual in the population. More data and better quality data will result in more accurate predictions.
+
+Model selection: The choice of model used to estimate breeding values also affects the accuracy of the predictions. More complex models that take into account multiple factors, such as environmental effects and the effects of specific alleles or markers, may result in more accurate predictions.
+
+Parameter estimation: The methods used to estimate the parameters of the model also affect the accuracy of breeding value estimates. Maximum likelihood and Bayesian methods are commonly used, and the choice of method will depend on the specific requirements of the research question and the data available.
+
+Sampling variability: Breeding value estimates are subject to sampling variability, which refers to the fluctuations in the estimates due to the finite size of the sample being analyzed. This variability is reduced as the sample size increases.
+
+In general, the accuracy of breeding value estimates can be improved by increasing the quality and quantity of phenotypic and relatedness data, by using more complex models that take into account multiple factors, and by using methods that provide accurate estimates of the parameters of the model.
+
+
+## Exercise 2: Estimate pedigree based breeding values for mouse data 
+In this practical we will estimate breeding values for quantitative traits in the mouse population. We will be using the BLUP method. This method allow for estimation of breeding values using phenotypic information for individuals from a general pedigree. BLUP is based on linear mixed model methodology and estimates of breeding values can be obtained by solving the mixed model equations. The BLUP method also require a genetic relationship matrix and estimates of variance components (e.g., $\sigma_a^2$ and $\sigma_e^2$). Furthermore, we will compute reliabilities to determine how well we have estimated the breeding value in relation to the true breeding value. These methods and algorithms are implemented in the R package `qgg` introduced previously.
+
+## R code for estimating pedigree based breeding values
+
+This R code performs a REML/BLUP (restricted maximum likelihood/best linear unbiased prediction) 
+analysis on mouse data. The purpose of this analysis is to evaluate the results 
+of estimating variance components and breeding values using a pedigree-based 
+relationship matrix.
+
+
+### Load R packages
+The 'qgg' and 'corrplot' packages are loaded for use in the analysis.
+
+```{r, eval=TRUE, echo=TRUE}
+library(qgg) 
+library(corrplot)
+```
+
+### Load data 
+The data for the analysis is loaded using the 'readRDS' function. The 'mouse' data 
+contains information on mice, such as body weight. The 'pedigree' data contains 
+information on the family relationships.
+
+```{r, eval=TRUE, echo=TRUE}
+mouse <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/mouseqtl.rds"))
+pedigree <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/pedigree.rds"))
+```
+
+### Explore data
+The structure of the 'mouse', and 'pedigree' data is explored 
+using the 'str' function.
+
+```{r, eval=TRUE, echo=TRUE}
+str(mouse)
+str(pedigree)
+```
+
+### Compute pedigree based relationship matrix
+A pedigree-based relationship matrix (A) is computed from the 'pedigree' data 
+using the 'grm' function. The dimensions of the A matrix are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+A <- grm(pedigree=pedigree) 
+dim(A)
+```
+
+### Make a plot of A matrix (slow)
+A plot of the A matrix is created using the 'corrplot' function. 
+The plot is displayed in color, with a white background and no outline. 
+The method of plotting the A matrix is set to "color".
+
+```{r, eval=TRUE, echo=TRUE}
+corrplot(A, method="color", bg="white", 
+         outline=FALSE, col=NULL, tl.pos="n",is.corr = FALSE, xlab=FALSE, ylab=FALSE)
+```
+
+#### Q1: Describe the plot you just made of the pedigree based relationship matrix? 
+#### A1: 
+
+
+### Define response variable
+The response variable 'y' is defined as the body weight column in the 'mouse' data.
+
+```{r, eval=TRUE, echo=TRUE}
+y <- mouse[,"BW"]
+```
+
+### Define design matrix for fixed effects
+A design matrix for fixed effects is created using the 'model.matrix' function 
+and is stored in the 'X' variable. The fixed effects include sex and reps, 
+which are predictors of body weight.
+
+```{r, eval=TRUE, echo=TRUE}
+X <- model.matrix(BW ~ sex + reps, data=mouse)
+ids <- rownames(X)
+```
+
+### Estimate variance components using REML and breeding values using BLUP
+The variance components and breeding values are estimated using the 'greml' function. 
+The function is run using the A matrix. The results are stored in 'fitA' variables. 
+The variance components are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+fitA <- greml(y=y, X=X, GRM=list(A=A[ids,ids]))
+fitA$theta
+```
+
+### Scatter plot of breeding values estimated using the A matrix
+A scatter plot is created to compare the observed phenotypes and the breeding 
+values estimated using the A matrix.  The x-axis displays the breeding values 
+estimated using the A matrix and the y-axis displays the phenotypic values. 
+The correlation between the two variables is also displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+plot(x=fitA$g, y=fitA$y, xlab="Pedigree Breeding values", 
+     ylab="Phenotypic values", frame.plot=FALSE, 
+     main=paste("Corr =", round(cor(fitA$g, fitA$y),2)))
+```
+
+#### Q2: Describe the relationship between the phenotypic and estimated breeding values? 
+#### A2: 
+
+### Histogram of breeding values estimated using the matrix A
+A histogram is created to display the distribution of the breeding values estimated 
+using the A matrix. 
+
+```{r, eval=TRUE, echo=TRUE}
+hist(fitA$g, main="Pedigree Breeding values")
+```
+
+#### Q3: Describe the distribution of the observed breeding values? 
+#### A3: 
+
+
+### Histograms of phenotypes, breeding values and residuals
+Three histograms are created to display the distribution of phenotypes, 
+breeding values and residuals. The layout is set to display the histograms side by side.
+
+```{r, eval=TRUE, echo=TRUE}
+layout(matrix(1:3,ncol=3))
+hist(fitA$y, main="Phenotypic values")
+hist(fitA$g, main="Breeding values")
+hist(fitA$e, main="Residual values")
+```
+
+#### Q4: Do you think that infinitesimal model is a good model for body weight in mice? 
+#### A4: 
+
+
+To further explore the value of using phenotypic information from different relatives consider the general formula for reliability of estimated breeding value using different sources of information: {-}
+\begin{align}
+			r_{a,\hat{a}}^2=\frac{(a')^2nh^2}{1+(n-1)r}
+\end{align}
+
+where $a'$ is the genetic relationship between the breeding individual and individuals with phenotypes, $n$ is the number of phenotypic records, $h^2$ is the trait heritability, and $r$ is correlation between individuals with observations ($r = a^{''}h2  + c2$, where $a^{''}$ = genetic relationship between individuals with records and target, c2 = common environmental component).
+
+We want to compare the reliabity of the estimated breeding value for an individual computed based on phenotypic observation on different types of relatives. Assume that the trait narrow sense trait heritability $h^2=0.35$ and that the common environmental component $c2=0$ . 
+
+#### Q5: What is the reliability if we compute the breeding values based on?
+#### A5: 
+
+1) Own 
+1) Mother
+2) 50 paternal halfsibs (same father)
+3) 20 offspring that halfsibs (different mothers)
+
+
+
+\newpage
+
+# Practical 5: Estimation of Genomic Breeding Values
+
+## Time schedule of practical session 5:
+\begin{tabular}{|l|l|}
+\hline
+Time & Activity \\
+\hline
+11:15 & Questions to lecture and multiple-choice questions \\
+\hline
+11:25 & Introduction to exercises \\
+\hline
+11:35 & Assignments to groups – work with exercises \\
+\hline
+12:00 & Break \\
+\hline
+12:35 & Prepare final words of exercises in each group \\
+\hline
+12:45 & Present final words \\
+\hline
+12:50 & Repeat multiple-choice questions \\
+\hline
+13:00 & End of practical session 1 \\
+\hline
+\end{tabular}
+
+
+## Exercise 1: Basic principles for estimating genomic breeding values
+Genomic selection (GS) is a breeding method that uses genomic information to predict the breeding values of individuals for specific traits. Below are a few questions related to basic the basic principles for estimating genomic breeding values. Discuss the question in groups of 3-5 students. Summarize your answer in a few bullet points.
+
+
+#### Q1: What data is required for genomic prediction? 
+#### A1: 
+The data required for genomic prediction can vary depending on the species and the traits of interest, but typically include the following:
+
+Genotypic data: This is the most critical component of genomic prediction, and typically consists of a large number of single nucleotide polymorphism (SNP) markers, genotyped across the genome of each individual. The number of markers used can range from tens of thousands to millions, depending on the species and the level of detail required.
+
+Phenotypic data: This is the data on the traits of interest, such as growth rate, feed efficiency, or disease resistance. Phenotypic data is used to train the predictive models and evaluate the accuracy of the predictions.
+
+Additional information: Other information, such as environmental factors, can also be incorporated into the predictive models to improve the accuracy of the predictions.
+
+It is important to note that the quality and quantity of the data used for genomic prediction can have a significant impact on the accuracy of the predictions. Thus, it is important to carefully consider the data sources and quality control measures that are used in genomic prediction.
+
+#### Q2: Describe the the genomic relationship? 
+#### A2: 
+A genomic relationship matrix (GRM) is a matrix that represents the relationship between individuals in a population based on their genome-wide genetic markers. 
+
+The GRM is similar to the traditional numerator relationship matrix (NRM), which is based on the relatedness between individuals as estimated from pedigree information. However, the GRM is based on the similarity of genomic markers between individuals, rather than the relatedness estimated from pedigree information.
+
+The elements of the GRM are estimated as the average of the squared differences between the marker genotypes for a pair of individuals, weighted by the marker-specific allele frequencies. The resulting matrix provides an estimate of the expected genetic relationship between individuals, which can be used to predict the breeding values of individuals.
+
+GRMs can be used to estimate breeding values for traits that are influenced by many genes, or for which the underlying genes are unknown. They are also useful in populations with limited pedigree information, as the genomic information can be used to estimate the relatedness between individuals even if there is limited information on the pedigrees of the individuals in the population.
+
+#### Q3: What are the advantages of genomic selection? 
+#### A3: 
+Genomic selection (GS) is a breeding method that uses genomic information to predict the breeding values of individuals for specific traits. There are several benefits of using GS over traditional methods of breeding value estimation:
+
+Increased accuracy: GS allows for more accurate prediction of breeding values, compared to traditional methods that rely on pedigree information and/or phenotypic information. This is because genomic information provides a more complete picture of the underlying genetic makeup of individuals and the contribution of individual genes to the trait of interest.
+
+Reduced generation interval: GS enables the identification of the most promising individuals for breeding purposes at an earlier stage, reducing the generation interval and accelerating the pace of genetic progress.
+
+Increased efficiency: GS allows for the selection of individuals based on genomic information, rather than phenotypic information, which can be more time-consuming and expensive to obtain.
+
+Increased diversity: GS can be used to incorporate a wider range of individuals into the breeding program, including those with limited phenotypic information, or those that are not easily phenotyped.
+
+Improved predictions for complex traits: GS can be particularly useful for predicting the breeding values of complex traits, such as feed efficiency, that are influenced by many genes.
+
+Overall, GS provides a more efficient and effective approach to breeding, with the potential to enhance the genetic improvement of crops and livestock for a variety of important traits.
+
+
+
+
+<!-- #### Q1: Describe the basic principle for estimating genomic breeding values?  -->
+<!-- #### A1:  -->
+
+<!-- The basic principles for estimating genomic breeding values are as follows: -->
+
+<!-- Modeling the relationship between genotypes and phenotypes: The first step in estimating genomic breeding values is to model the relationship between the genotypes and phenotypes of individuals in the population. This is typically done using linear mixed models, which allow for the estimation of fixed effects (e.g. the effects of SNP markers) and random effects (e.g. the effects of the relationships between individuals). -->
+
+<!-- Estimating the genomic relationship matrix: The next step is to estimate the genomic relationship matrix (GRM), which represents the relationship between individuals based on their genomic information. The GRM is used to adjust the phenotype data for the effects of relatedness between individuals. -->
+
+<!-- Predicting breeding values: Once the relationship between the genotypes and phenotypes has been modeled and the GRM has been estimated, the breeding values of individuals can be predicted using the genomic information. This is typically done using a form of ridge regression, where the genomic information is used to predict the phenotype and the GRM is used to adjust for relatedness. -->
+
+<!-- Validation: The accuracy of the predictions can be evaluated by comparing the predicted breeding values to the actual phenotypic data. This can be done using cross-validation, where the data is divided into training and validation sets, or by using an independent validation population. -->
+
+<!-- Incorporating other sources of information: Additional sources of information, such as pedigree information or environmental factors, can also be incorporated into the predictive models to improve the accuracy of the predictions. -->
+
+<!-- It is important to note that the accuracy of the predictions can vary depending on the size of the training population, the quality and quantity of the data used, and the complexity of the predictive models. Thus, it is important to carefully consider the statistical methods used for genomic prediction and to validate the predictions using independent data. -->
+
+## Exercise 2: Estimate genomic breeding values for mouse data 
+In this exercise we will estimate genomic breeding values for quantitative traits in the mouse population. We will be using the GBLUP method. This method estimate genomic breeding values using phenotypic and genotypic information for individuals from a general pedigree. GBLUP is based on linear mixed model methodology and estimates of genomic breeding values can be obtained by solving the mixed model equations. The GBLUP method also require a genomic relationship matrix estimated from genetic marker data and estimates of variance components (e.g., $\sigma_a^2$ and $\sigma_e^2$). These methods are implemented in the R package `qgg` introduced previously.
+
+
+## R code for estimating genomic breeding values
+
+This R code performs a REML/BLUP (restricted maximum likelihood/best linear unbiased prediction) 
+analysis on mouse data. The purpose of this analysis is to compare the results 
+of estimating variance components and breeding values using a pedigree-based 
+relationship matrix and a genomic relationship matrix.
+
+
+### Load R packages
+The 'qgg' and 'corrplot' packages are loaded for use in the analysis.
+
+```{r, eval=TRUE, echo=TRUE}
+library(qgg) 
+library(corrplot)
+```
+
+### Load data 
+The data for the analysis is loaded using the 'readRDS' function. The 'mouse' data 
+contains information on mice, such as body weight. The 'pedigree' data contains 
+information on the family relationships, while the 'genotypes' data contains 
+genetic marker information.
+
+```{r, eval=TRUE, echo=TRUE}
+mouse <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/mouseqtl.rds"))
+pedigree <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/pedigree.rds"))
+genotypes <- readRDS(url("https://github.com/psoerensen/bgcourse/raw/main/data/genotypes_imputed.rds"))
+```
+
+### Explore data
+The structure of the 'mouse', 'pedigree', and 'genotypes' data is explored 
+using the 'str' function.
+
+```{r, eval=TRUE, echo=TRUE}
+str(mouse)
+str(pedigree)
+str(genotypes)
+```
+
+### Compute genomic relationship matrix
+A genomic relationship matrix (G) is computed from the 'genotypes' data. 
+The columns of the 'genotypes' data are first centered and scaled (i.e., mean=0 and sd=1). 
+The 'grm' function is used to compute the G matrix. The dimensions of the G matrix are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+W <- scale(genotypes) # here we center and scale columns in genotypes (i.e., mean=0, sd=1)
+G <- grm(W=W) 
+dim(G)
+```
+
+### Make a plot of G matrix (slow)
+A plot of the G matrix is created using the 'corrplot' function. 
+The plot is displayed in color, with a white background and no outline. 
+The method of plotting the G matrix is set to "color".
+
+```{r, eval=TRUE, echo=TRUE}
+corrplot(G, method="color", bg="white", 
+         outline=FALSE, col=NULL, tl.pos="n",is.corr = FALSE, xlab=FALSE, ylab=FALSE)
+```
+
+#### Q1: Describe the plot you just made of the genomic relationship? 
+#### A1: 
+
+### Compute pedigree based relationship matrix
+A pedigree-based relationship matrix (A) is computed from the 'pedigree' data 
+using the 'grm' function. The dimensions of the A matrix are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+A <- grm(pedigree=pedigree) 
+dim(A)
+```
+
+### Make a plot of A matrix (slow)
+A plot of the A matrix is created using the 'corrplot' function. 
+The plot is displayed in color, with a white background and no outline. 
+The method of plotting the A matrix is set to "color".
+
+```{r, eval=TRUE, echo=TRUE}
+corrplot(A, method="color", bg="white", 
+         outline=FALSE, col=NULL, tl.pos="n",is.corr = FALSE, xlab=FALSE, ylab=FALSE)
+```
+
+
+#### Q2: Are the two relationship matrices similar?
+#### A2: 
+
+
+
+### Define response variable
+The response variable 'y' is defined as the body weight column in the 'mouse' data.
+
+```{r, eval=TRUE, echo=TRUE}
+y <- mouse[,"BW"]
+```
+
+### Define design matrix for fixed effects
+A design matrix for fixed effects is created using the 'model.matrix' function 
+and is stored in the 'X' variable. The fixed effects include sex and reps, 
+which are predictors of body weight.
+
+```{r, eval=TRUE, echo=TRUE}
+X <- model.matrix(BW ~ sex + reps, data=mouse)
+ids <- rownames(X)
+```
+
+### Estimate variance components using REML and breeding values using BLUP
+The variance components and breeding values are estimated using the 'greml' function. 
+The function is run twice, once using the A matrix and once using the G matrix. 
+The results are stored in 'fitA' and 'fitG' variables, respectively. 
+The variance components are displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+fitA <- greml(y=y, X=X, GRM=list(A=A[ids,ids]))
+fitA$theta
+fitG <- greml(y=y, X=X, GRM=list(G=G[ids,ids]))
+fitG$theta
+```
+
+### Scatter plot of breeding values estimated A or G
+A scatter plot is created to compare the breeding values estimated using A and G matrices. 
+The x-axis displays the breeding values estimated using the A matrix and the y-axis 
+displays the breeding values estimated using the G matrix. 
+The correlation between the two sets of breeding values is also displayed.
+
+```{r, eval=TRUE, echo=TRUE}
+plot(x=fitA$g, y=fitG$g, xlab="Pedigree Breeding values", 
+     ylab="Genomic Breeding values", frame.plot=FALSE, 
+     main=paste("Corr =", round(cor(fitA$g, fitG$g),2)))
+```
+
+### Histograms of breeding values estimated using A or G
+Two histograms are created to display the distribution of the breeding values estimated 
+using the A and G matrices. The layout is set to display the histograms side by side.
+
+```{r, eval=TRUE, echo=TRUE}
+layout(matrix(1:2,ncol=2))
+hist(fitA$g, main="Pedigree Breeding values")
+hist(fitG$g, main="Genomic Breeding values")
+```
+
